@@ -15,21 +15,36 @@ spec:
       containers:
       - name: translator
         image: libretranslate/libretranslate:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
-            memory: "512Mi"    # כמות הזיכרון המינימלית שהפוד יקבל
-            cpu: "500m"       # חצי ליבה (Core)
+            memory: "512Mi"
+            cpu: "500m"
           limits:
-            memory: "1Gi"      # המקסימום שהפוד יכול לקחת
+            memory: "1Gi"
             cpu: "1000m"
-        imagePullPolicy: IfNotPresent
         env:
         - name: LT_LOAD_ONLY
           value: "en,he"
         - name: LT_UPDATE_MODELS
           value: "false"
+        - name: LT_OFFLINE  # הוספנו את זה!
+          value: "true"
         ports:
         - containerPort: 5000
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 180 # הגדלנו ל-2 דקות
+          periodSeconds: 20
+          failureThreshold: 5      # ינסה 5 פעמים לפני שיהרוג את הפוד
+        readinessProbe:
+          httpGet:
+            path: /languages
+            port: 5000
+          initialDelaySeconds: 180
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
