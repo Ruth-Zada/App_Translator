@@ -6,7 +6,7 @@ volumes:
   db_data:
 
 services:
-  # Renamed from 'Back end' to 'backend'
+  
   backend:
     build: ./backend
     environment:
@@ -19,7 +19,7 @@ services:
     networks:
       - my-network
 
-  # Renamed from 'front end' to 'frontend'
+  
   frontend:
     build: ./frontend
     ports:

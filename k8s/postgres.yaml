@@ -43,7 +43,7 @@ spec:
       labels:
         app: postgres
     spec:
-      # אם הפוד נשאר ב-Pending, מחקי את ה-nodeSelector למטה
+      
       nodeSelector:
         kubernetes.io/hostname: minikube
       containers:
@@ -91,7 +91,7 @@ kind: Service
 metadata:
   name: postgres-service
 spec:
-  # clusterIP: None
+ 
   selector:
     app: postgres
   ports:

@@ -28,7 +28,7 @@ spec:
           value: "en,he"
         - name: LT_UPDATE_MODELS
           value: "false"
-        - name: LT_OFFLINE  # הוספנו את זה!
+        - name: LT_OFFLINE 
           value: "true"
         ports:
         - containerPort: 5000
@@ -36,9 +36,9 @@ spec:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 180 # הגדלנו ל-2 דקות
+          initialDelaySeconds: 180 
           periodSeconds: 20
-          failureThreshold: 5      # ינסה 5 פעמים לפני שיהרוג את הפוד
+          failureThreshold: 5   
         readinessProbe:
           httpGet:
             path: /languages
