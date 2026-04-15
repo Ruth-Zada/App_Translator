@@ -1,0 +1,48 @@
+
+imagePullPolicy: IfNotPresent
+
+backend:
+  image: ruth630/app-translator-backend:v3
+  replicas: 2
+  port: 3001
+  
+  translator_url: "http://app-translator-translator-service:5000/translate"
+
+
+frontend:
+  image: ruth630/app-translator-frontend:latest
+  replicas: 2
+  port: 80
+
+
+translator:
+  image: libretranslate/libretranslate:latest
+  replicas: 1
+  port: 5000
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+
+postgresql:
+  auth:
+    postgresPassword: postgres
+    username: postgres
+    password: postgres
+    database: translations
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+
+ingress:
+  enabled: true
+  host: translator.local
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"

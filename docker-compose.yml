@@ -1,0 +1,52 @@
+# version: '3.8'
+networks:
+  my-network:
+    driver: bridge
+volumes:
+  db_data:
+
+services:
+  # Renamed from 'Back end' to 'backend'
+  backend:
+    build: ./backend
+    environment:
+      database_url: postgres://postgres:postgres@db:5432/translations
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+      - translator
+    networks:
+      - my-network
+
+  # Renamed from 'front end' to 'frontend'
+  frontend:
+    build: ./frontend
+    ports:
+      - 8080:80
+    networks:
+      - my-network
+    depends_on:
+      - db
+      - translator
+      - backend
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: translations
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - /db/init.sql:/docker-entrypoint-initdb.d/init.sql# Added 
+    networks:
+      - my-network
+
+  translator:
+    image: libretranslate/libretranslate
+    ports:
+      - 5000:5000
+    networks:
+      - my-network
+

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-translator
+spec:
+  replicas: {{ .Values.translator.replicas }}
+  selector:
+    matchLabels:
+      app: translator
+  template:
+    metadata:
+      labels:
+        app: translator
+    spec:
+      containers:
+      - name: translator
+        image: {{ .Values.translator.image }}
+        ports:
+        - containerPort: {{ .Values.translator.port }}
+        resources:
+          limits:
+            memory: {{ .Values.translator.resources.limits.memory }}
+            cpu: {{ .Values.translator.resources.limits.cpu }}
+          requests:
+            memory: {{ .Values.translator.resources.requests.memory }}
+            cpu: {{ .Values.translator.resources.requests.cpu }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-translator-service
+spec:
+  selector:
+    app: translator
+  ports:
+  - port: 5000
+    targetPort: {{ .Values.translator.port }}
