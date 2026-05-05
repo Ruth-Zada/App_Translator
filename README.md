@@ -127,3 +127,22 @@ Deploy to cloud (AWS / GCP)
 ## Author
 DevOps Engineer in progress  
 Focused on building scalable and production-ready systems
+graph TD
+    subgraph "External Access"
+        User((User)) --> Ingress[NGINX Ingress Controller]
+    end
+
+    subgraph "Kubernetes Cluster"
+        Ingress --> |/| FE[Frontend Service]
+        Ingress --> |/api| BE[Backend Service]
+        
+        FE --> FE_Pods[Frontend Pods]
+        BE --> BE_Pods[Backend Pods]
+        
+        BE_Pods --> DB_Svc[Postgres Service]
+        BE_Pods --> Trans_Svc[LibreTranslate API]
+        
+        DB_Svc --> DB_Pod[Postgres Pod]
+        DB_Pod --> PVC[Persistent Volume Claim]
+        PVC --> PV[(Persistent Volume)]
+    end
