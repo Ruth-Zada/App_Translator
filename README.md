@@ -127,22 +127,28 @@ Deploy to cloud (AWS / GCP)
 ## Author
 DevOps Engineer in progress  
 Focused on building scalable and production-ready systems
+```mermaid
 graph TD
     subgraph "External Access"
-        User((User)) --> Ingress[NGINX Ingress Controller]
+        User((User)) --> |Port 80| Ingress[NGINX Ingress Controller]
     end
 
     subgraph "Kubernetes Cluster"
-        Ingress --> |/| FE[Frontend Service]
-        Ingress --> |/api| BE[Backend Service]
+        %% Ingress Paths
+        Ingress --> |/| FE_Svc[frontend-service: 80]
+        Ingress --> |/api| BE_Svc[backend-service: 3001]
         
-        FE --> FE_Pods[Frontend Pods]
-        BE --> BE_Pods[Backend Pods]
+        %% Services to Pods
+        FE_Svc --> FE_Pods[Frontend Pods]
+        BE_Svc --> BE_Pods[Backend Pods]
         
-        BE_Pods --> DB_Svc[Postgres Service]
-        BE_Pods --> Trans_Svc[LibreTranslate API]
+        %% Backend Dependencies
+        BE_Pods --> |Port 5432| DB_Svc[app-translator-postgresql]
+        BE_Pods --> |Port 5000| Trans_Svc[app-translator-translator-service]
         
+        %% Database Structure
         DB_Svc --> DB_Pod[Postgres Pod]
         DB_Pod --> PVC[Persistent Volume Claim]
         PVC --> PV[(Persistent Volume)]
     end
+    ```
