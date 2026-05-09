@@ -1,154 +1,435 @@
-App Translator - DevOps Project
+# App Translator - DevOps Project
 
-A complete DevOps microservices platform showcasing Kubernetes-based deployment with Helm, Docker, and scalable service architecture. Built as a hands-on DevOps project to simulate a real-world microservices environment running on Kubernetes.
+A production-style microservices translation platform built with Kubernetes, Docker, Helm, Terraform, and CI/CD automation.
 
-## Project Goal
-This project demonstrates how to design, containerize, deploy, and manage a scalable microservices system using modern DevOps tools and best practices.
+---
 
-## Architecture
-The system is built using a distributed architecture to ensure scalability, maintainability, and separation of concerns.
+# Project Overview
 
-Architecture
+This project demonstrates a complete DevOps workflow for deploying and managing a scalable microservices application inside Kubernetes.
 
-## Components
+The system includes:
 
-### Frontend
-Static web application  
-Served using Nginx  
-Communicates with backend via internal Kubernetes DNS  
+- Frontend application
+- Backend API
+- Translation engine service
+- PostgreSQL database
+- Kubernetes networking
+- Persistent storage
+- Infrastructure as Code
+- CI/CD automation
 
-### Backend
-Built with Node.js  
-Handles API requests  
-Communicates with Translator service  
-Stores translation history in PostgreSQL  
+---
 
-### Translator Service
-Powered by LibreTranslate  
-Self-hosted translation engine  
-Provides language translation API  
+# Full Architecture
 
-### Database
-PostgreSQL  
-Stores translation history  
-Uses Persistent Volume for data durability  
-
-## System Flow
-User accesses the system via Ingress (translator.local)  
-Request is routed to the Frontend  
-Frontend sends API request to Backend  
-Backend sends translation request to Translator  
-Translated text is returned to Backend  
-Backend stores result in PostgreSQL  
-Response is returned to the user  
-
-## DevOps Highlights
-Containerized multi-service application using Docker  
-Orchestrated services using Kubernetes Deployments & Services  
-Implemented Ingress Controller (NGINX) for routing  
-Used Persistent Volumes (PV & PVC) for database storage  
-Configured environment variables for dynamic configuration  
-Packaged application using Helm Charts  
-Internal communication using Kubernetes DNS  
-Multi-container architecture (microservices)  
-
-## Prerequisites
-Docker  
-Kubernetes (Minikube)  
-Helm  
-kubectl  
-
-## How to Run
-
-### Kubernetes (Recommended)
-minikube start  
-minikube addons enable ingress  
-
-cd helm/app-translator  
-helm dependency build  
-helm install app-translator .  
-
-## Access Application
-echo "$(minikube ip) translator.local" | sudo tee -a /etc/hosts  
-
-Open browser:  
-http://translator.local  
-
-## API Example
-curl -X POST http://translator.local/api/translate \
-  -H "Content-Type: application/json" \
-  -d '{"text":"hello","from":"en","to":"he"}'
-
-Expected response:
-
-{
-  "translation": "שלום"
-}
-
-## Deployment Verification
-All pods are running (kubectl get pods)  
-Services are accessible via Ingress  
-Backend communicates with PostgreSQL and Translator service  
-Data persists after pod restart  
-
-## Challenges & Solutions
-Fixed service communication issues using kubectl logs and kubectl exec  
-Solved DNS resolution problems between services  
-Debugged container startup failures  
-Implemented readiness & liveness probes for stability  
-Ensured persistent storage works correctly after pod recreation  
-
-## Project Structure
-app-translator/  
-├── backend/  
-├── frontend/  
-├── docker-compose.yml  
-├── k8s/  
-├── helm/  
-│   └── app-translator/  
-├── architecture.png  
-└── README.md  
-
-## Key Learnings
-Designed and deployed a microservices architecture on Kubernetes  
-Kubernetes networking and service discovery  
-Stateful workloads with PostgreSQL  
-Helm chart creation and templating  
-Debugging distributed systems  
-Infrastructure as Code (IaC)  
-
-## Future Improvements
-Add CI/CD pipeline (GitHub Actions)  
-Add monitoring (Prometheus + Grafana)  
-Add logging (ELK Stack)  
-Implement authentication & security  
-Deploy to cloud (AWS / GCP)  
-
-## Author
-DevOps Engineer in progress  
-Focused on building scalable and production-ready systems
 ```mermaid
-graph TD
-    subgraph "External Access"
-        User((User)) --> |Port 80| Ingress[NGINX Ingress Controller]
+flowchart TB
+
+    %% =========================
+    %% EXTERNAL ACCESS
+    %% =========================
+
+    User([User Browser])
+
+    subgraph External["External Access"]
+        Ingress["NGINX Ingress Controller"]
     end
 
-    subgraph "Kubernetes Cluster"
-        %% Ingress Paths
-        Ingress --> |/| FE_Svc[frontend-service: 80]
-        Ingress --> |/api| BE_Svc[backend-service: 3001]
-        
-        %% Services to Pods
-        FE_Svc --> FE_Pods[Frontend Pods]
-        BE_Svc --> BE_Pods[Backend Pods]
-        
-        %% Backend Dependencies
-        BE_Pods --> |Port 5432| DB_Svc[app-translator-postgresql]
-        BE_Pods --> |Port 5000| Trans_Svc[app-translator-translator-service]
-        
-        %% Database Structure
-        DB_Svc --> DB_Pod[Postgres Pod]
-        DB_Pod --> PVC[Persistent Volume Claim]
-        PVC --> PV[(Persistent Volume)]
+    User -->|HTTP Request :80| Ingress
+
+    %% =========================
+    %% KUBERNETES CLUSTER
+    %% =========================
+
+    subgraph Cluster["Kubernetes Cluster"]
+
+        %% Frontend Layer
+        subgraph FrontendLayer["Frontend Layer"]
+
+            FrontService["frontend-service :80"]
+
+            FrontPod["Frontend Pod
+            NGINX Static App"]
+
+        end
+
+        %% Backend Layer
+        subgraph BackendLayer["Backend Layer"]
+
+            BackService["backend-service :3001"]
+
+            BackPod["Backend Pod
+            Node.js API"]
+
+        end
+
+        %% Internal Services
+        subgraph InternalServices["Internal Internal Services"]
+
+            TranslatorService["translator-service :5000
+            LibreTranslate"]
+
+            DBService["postgres-service :5432"]
+
+        end
+
+        %% Database Layer
+        subgraph DatabaseLayer["Database Layer"]
+
+            PostgresPod["PostgreSQL Pod"]
+
+            PVC["Persistent Volume Claim"]
+
+            PV["Persistent Volume"]
+
+        end
+
     end
-    ```
+
+    %% =========================
+    %% TRAFFIC FLOW
+    %% =========================
+
+    Ingress -->|/| FrontService
+    Ingress -->|/api| BackService
+
+    FrontService --> FrontPod
+
+    BackService --> BackPod
+
+    BackPod --> TranslatorService
+
+    BackPod --> DBService
+
+    DBService --> PostgresPod
+
+    PostgresPod --> PVC
+
+    PVC --> PV
+```
+
+---
+
+# CI/CD Pipeline
+
+```mermaid
+flowchart LR
+
+    Developer[Developer Push]
+
+    GitHub[GitHub Repository]
+
+    Actions[GitHub Actions Pipeline]
+
+    BuildFrontend[Build Frontend Image]
+
+    BuildBackend[Build Backend Image]
+
+    DockerHub[Docker Hub Registry]
+
+    Kubernetes[Kubernetes Deployment]
+
+    Developer --> GitHub
+
+    GitHub --> Actions
+
+    Actions --> BuildFrontend
+    Actions --> BuildBackend
+
+    BuildFrontend --> DockerHub
+    BuildBackend --> DockerHub
+
+    DockerHub --> Kubernetes
+```
+
+---
+
+# Infrastructure as Code
+
+Infrastructure provisioning and application deployment are fully managed using Terraform and Helm.
+
+## Terraform Responsibilities
+
+- Kubernetes namespace provisioning
+- Helm release deployment
+- Infrastructure consistency
+- Automated environment setup
+- Declarative infrastructure management
+
+---
+
+# Kubernetes Components
+
+| Component | Purpose |
+|---|---|
+| Deployment | Manages Pods lifecycle |
+| Service | Internal networking between services |
+| Ingress | External HTTP routing |
+| PVC/PV | Persistent database storage |
+| Configurations | Environment variable management |
+| Helm | Kubernetes package management |
+
+---
+
+# Application Components
+
+---
+
+## Frontend
+
+### Responsibilities
+
+- User interface
+- Sends translation requests
+- Displays translation results
+
+### Technologies
+
+- HTML / JavaScript
+- NGINX
+- Docker
+
+---
+
+## Backend API
+
+### Responsibilities
+
+- Handles API requests
+- Connects frontend to translator service
+- Stores translation history
+
+### Technologies
+
+- Node.js
+- Express
+- Docker
+
+---
+
+## Translation Service
+
+### Responsibilities
+
+- Performs text translations
+- Exposes translation API internally
+
+### Technologies
+
+- LibreTranslate
+
+---
+
+## Database
+
+### Responsibilities
+
+- Stores translation history
+- Provides persistent data storage
+
+### Technologies
+
+- PostgreSQL
+- Kubernetes Persistent Volumes
+
+---
+
+# System Flow
+
+## Request Lifecycle
+
+### Step 1
+User accesses the application through the NGINX Ingress Controller.
+
+### Step 2
+Ingress routes requests to the appropriate Kubernetes Service.
+
+### Step 3
+Frontend sends API requests to the Backend service.
+
+### Step 4
+Backend communicates with:
+- LibreTranslate service
+- PostgreSQL database
+
+### Step 5
+Translation result is returned to the frontend.
+
+### Step 6
+Translation history is saved in PostgreSQL.
+
+---
+
+# DevOps Features
+
+- Kubernetes microservices architecture
+- Internal Kubernetes DNS communication
+- Infrastructure as Code using Terraform
+- Helm-based deployments
+- CI/CD automation with GitHub Actions
+- Persistent storage management
+- Containerized services using Docker
+- Production-style networking architecture
+- Scalable service design
+
+---
+
+# Challenges & Solutions
+
+| Challenge | Solution |
+|---|---|
+| Service communication between pods | Used Kubernetes Services & internal DNS |
+| Database persistence after pod recreation | Implemented PV & PVC |
+| CI/CD automation | Built GitHub Actions pipeline |
+| External traffic routing | Configured NGINX Ingress Controller |
+| Multi-service deployment complexity | Managed deployments with Helm |
+
+---
+
+# Project Structure
+
+```bash
+app-translator/
+│
+├── backend/
+│
+├── frontend/
+│
+├── k8s/
+│
+├── helm/
+│   └── app-translator/
+│
+├── terraform/
+│
+├── .github/
+│   └── workflows/
+│
+├── docker-compose.yml
+│
+├── architecture.png
+│
+└── README.md
+```
+
+---
+
+# Technologies Used
+
+## Containerization
+- Docker
+
+## Orchestration
+- Kubernetes
+- Helm
+
+## Infrastructure
+- Terraform
+
+## CI/CD
+- GitHub Actions
+
+## Backend
+- Node.js
+- Express
+
+## Database
+- PostgreSQL
+
+## Networking
+- NGINX Ingress Controller
+
+## Translation Engine
+- LibreTranslate
+
+---
+
+# Deployment
+
+---
+
+## Start Minikube
+
+```bash
+minikube start
+```
+
+---
+
+## Enable Ingress
+
+```bash
+minikube addons enable ingress
+```
+
+---
+
+## Terraform Deployment
+
+```bash
+cd terraform
+
+terraform init
+
+terraform apply -auto-approve
+```
+
+---
+
+## Helm Deployment
+
+```bash
+cd helm/app-translator
+
+helm dependency build
+
+helm install app-translator .
+```
+
+---
+
+# Access Application
+
+Add local DNS mapping:
+
+```bash
+echo "$(minikube ip) translator.local" | sudo tee -a /etc/hosts
+```
+
+Open browser:
+
+```bash
+http://translator.local
+```
+
+---
+
+# Key Learnings
+
+- Kubernetes networking and service discovery
+- Persistent storage management
+- Microservices deployment strategies
+- Infrastructure as Code principles
+- CI/CD automation
+- Helm chart packaging
+- Kubernetes Ingress configuration
+- Production-style DevOps workflows
+
+---
+
+# Future Improvements
+
+- Deploy to AWS EKS
+- Add monitoring with Prometheus & Grafana
+- Add centralized logging with ELK Stack
+- Add Horizontal Pod Autoscaling
+- Add security scanning in CI/CD
+- Implement secrets management
+- Add Kubernetes health checks
+
+---
+
+# Author
+
+DevOps Engineer focused on building scalable, automated, and production-ready cloud-native systems.
