@@ -1,0 +1,50 @@
+name: CI/CD Frontend - CloudFront Pro
+
+on:
+  push:
+    branches: [main, ci/cd]
+    paths: ['app/frontend/**', '.github/workflows/ci-frontend.yml']
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validate:
+    name: Frontend Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Verify Content Integrity
+        working-directory: app/frontend
+        run: |
+          [ -f index.html ] || (echo "Missing index.html" && exit 1)
+          grep -q "</html>" index.html || (echo "Incomplete HTML" && exit 1)
+          echo "✅ Integrity check passed"
+
+  deploy:
+    name: AWS S3 & CloudFront Release
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync to S3 (Optimized)
+        run: |
+          aws s3 sync app/frontend/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
+            --delete \
+            --cache-control "max-age=31536000" # הגדרת Caching בדפדפן המשתמש
+
+      - name: CloudFront Invalidation
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
