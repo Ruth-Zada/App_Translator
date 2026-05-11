@@ -52,8 +52,8 @@ jobs:
           context: ./backend
           push: false
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME || 'ruth630' }}/app-translator-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME || 'ruth630' }}/app-translator-backend:${{ github.sha }}
           load: true
     
       - name: Test Docker image
