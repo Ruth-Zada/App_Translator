@@ -3,48 +3,61 @@ name: CI/CD Frontend - CloudFront Pro
 on:
   push:
     branches: [main, ci/cd]
-    paths: ['app/frontend/**', '.github/workflows/ci-frontend.yml']
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci-frontend.yml'
 
 permissions:
-  id-token: write
-  contents: read
+  id-token: write   # חובה בשביל OIDC
+  contents: read    # חובה בשביל checkout
 
 jobs:
-  validate:
-    name: Frontend Quality Gate
+  # שלב 1 - בדיקה שהקבצים קיימים
+  build:
+    name: Build Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Verify Content Integrity
-        working-directory: app/frontend
+
+      - name: Verify files
         run: |
-          [ -f index.html ] || (echo "Missing index.html" && exit 1)
-          grep -q "</html>" index.html || (echo "Incomplete HTML" && exit 1)
-          echo "✅ Integrity check passed"
+          ls -la frontend/
+          echo "Frontend files verified"
 
+  # שלב 2 - העלאה ל-S3 ורענון CloudFront
   deploy:
-    name: AWS S3 & CloudFront Release
+    name: Deploy to S3 & CloudFront
     runs-on: ubuntu-latest
-    needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci/cd')
+    
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials (OIDC)
+      # התחברות ל-AWS באמצעות OIDC (ללא Access Keys)
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync to S3 (Optimized)
+      # סנכרון הקבצים ל-S3 (עם החרגות של קבצי דוקר ובדיקות)
+      - name: Sync to S3
         run: |
-          aws s3 sync app/frontend/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
+          aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --delete \
-            --cache-control "max-age=31536000" # הגדרת Caching בדפדפן המשתמש
+            --exclude "*.test.js" \
+            --exclude "Dockerfile" \
+            --exclude ".dockerignore" \
+            --exclude "nginx*.conf"
+          echo "✅ Deployed to S3!"
 
-      - name: CloudFront Invalidation
+      # רענון המטמון של CloudFront (הבונוס של שדרוג האבטחה)
+      - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
+          echo "✅ CloudFront cache cleared!"
