@@ -88,7 +88,6 @@ jobs:
         run: docker compose -f docker-compose.test.yml down -v
 
   # שלב 4: העלאה ל-DockerHub
-  # שלב 4: העלאה ל-DockerHub
   push:
     name: Push to DockerHub
     runs-on: ubuntu-latest
@@ -117,6 +116,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:${{ github.sha }}
+
   # שלב 5: בונוס - יצירת Tag בגיט
   tagging:
     name: Create Git Tag
