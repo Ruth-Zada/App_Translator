@@ -51,12 +51,14 @@ jobs:
         with:
           context: ./backend
           push: false
-          tags: sara3259/app-translator-backend:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:${{ github.sha }}
           load: true
     
       - name: Test Docker image
         run: |
-          docker run --rm sara3259/app-translator-backend:${{ github.sha }} node --version
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:${{ github.sha }} node --version
           echo "✅ Docker image builds and runs!"
 
   # שלב 3: בדיקות אינטגרציה
@@ -86,11 +88,11 @@ jobs:
         run: docker compose -f docker-compose.test.yml down -v
 
   # שלב 4: העלאה ל-DockerHub
+  # שלב 4: העלאה ל-DockerHub
   push:
     name: Push to DockerHub
     runs-on: ubuntu-latest
     needs: [build, integration-tests]
-    # רץ רק על פוש לברנצ'ים נבחרים ורק אם הבנייה הצליחה
     if: |
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci/cd') &&
@@ -113,9 +115,8 @@ jobs:
           context: ./backend
           push: true
           tags: |
-            sara3259/app-translator-backend:latest
-            sara3259/app-translator-backend:${{ github.sha }}
-
+            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/app-translator-backend:${{ github.sha }}
   # שלב 5: בונוס - יצירת Tag בגיט
   tagging:
     name: Create Git Tag
