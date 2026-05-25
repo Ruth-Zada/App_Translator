@@ -38,7 +38,7 @@ jobs:
 
       # התחברות ל-AWS באמצעות OIDC (ללא Access Keys)
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v4 // OIDC-based authentication
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
