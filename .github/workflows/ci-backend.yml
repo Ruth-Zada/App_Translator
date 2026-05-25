@@ -119,7 +119,6 @@ jobs:
 
   # שלב 5: בונוס - יצירת Tag בגיט
   tagging:
-
     name: Create Git Tag
     runs-on: ubuntu-latest
     needs: push
@@ -149,16 +148,16 @@ jobs:
           git config user.email "actions@github.com"
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
-deploy:
+
+  # שלב 6: Deploy
+  deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     needs: push
-
     if: |
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci/cd') &&
       needs.push.result == 'success'
-
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
